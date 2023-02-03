@@ -1,9 +1,11 @@
 import {gql, useQuery} from '@apollo/client';
-import {Box, Colors, ConfigTypeSchema, Icon, Spinner} from '@dagster-io/ui';
+import {Box, Colors, ConfigTypeSchema, ExternalAnchorButton, Icon, Spinner} from '@dagster-io/ui';
 import * as React from 'react';
 import {Link} from 'react-router-dom';
 import styled from 'styled-components/macro';
 
+import {AppContext} from '../app/AppContext';
+import {CodeLinkProtocolContext} from '../app/CodeLinkProtocol';
 import {ASSET_NODE_CONFIG_FRAGMENT} from '../assets/AssetConfig';
 import {AssetDefinedInMultipleReposNotice} from '../assets/AssetDefinedInMultipleReposNotice';
 import {
@@ -74,12 +76,18 @@ export const SidebarAssetInfo: React.FC<{
   const {assetMetadata, assetType} = metadataForAssetNode(asset);
   const hasAssetMetadata = assetType || assetMetadata.length > 0;
   const assetConfigSchema = asset.configField?.configType;
+  const codeOriginInfo = asset.metadataEntries.find((e) => e.label === '__code_origin');
+
+  const codeOrigin =
+    codeOriginInfo &&
+    codeOriginInfo.__typename === 'JsonMetadataEntry' &&
+    JSON.parse(codeOriginInfo.jsonString);
 
   const OpMetadataPlugin = asset.op?.metadata && pluginForMetadata(asset.op.metadata);
 
   return (
     <>
-      <Header assetNode={definition} repoAddress={repoAddress} />
+      <Header assetNode={definition} repoAddress={repoAddress} codeOrigin={codeOrigin} />
 
       <AssetDefinedInMultipleReposNotice
         assetKey={assetKey}
@@ -186,21 +194,39 @@ const Header: React.FC<{
   assetNode: AssetNodeForGraphQueryFragment;
   opName?: string;
   repoAddress?: RepoAddress | null;
-}> = ({assetNode, repoAddress}) => {
+  codeOrigin?: {file: string; line: number};
+}> = ({assetNode, repoAddress, codeOrigin}) => {
   const displayName = displayNameForAssetKey(assetNode.assetKey);
+
+  const {codeLinksEnabled} = React.useContext(AppContext);
+  const [codeLinkProtocol, _] = React.useContext(CodeLinkProtocolContext);
+
+  let codeLink = null;
+  if (codeLinksEnabled && codeOrigin) {
+    codeLink = codeLinkProtocol.protocol
+      .replace('{FILE}', codeOrigin.file)
+      .replace('{LINE}', codeOrigin.line.toString());
+  }
 
   return (
     <Box flex={{gap: 4, direction: 'column'}} margin={{left: 24, right: 12, vertical: 16}}>
-      <SidebarTitle
-        style={{
-          marginBottom: 0,
-          display: 'flex',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-        }}
-      >
-        <Box>{displayName}</Box>
-      </SidebarTitle>
+      <Box flex={{gap: 4, direction: 'row', justifyContent: 'space-between'}}>
+        <SidebarTitle
+          style={{
+            marginBottom: 0,
+            display: 'flex',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+          }}
+        >
+          <Box>{displayName}</Box>
+        </SidebarTitle>
+        {codeLink && (
+          <ExternalAnchorButton icon={<Icon name="open_in_new" />} href={codeLink}>
+            Open in editor
+          </ExternalAnchorButton>
+        )}
+      </Box>
       <Box flex={{direction: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
         <AssetCatalogLink to={assetDetailsPathForKey(assetNode.assetKey)}>
           {'View in Asset Catalog '}
