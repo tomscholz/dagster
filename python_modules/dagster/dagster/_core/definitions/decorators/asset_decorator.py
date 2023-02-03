@@ -1,3 +1,5 @@
+import inspect
+import os
 import warnings
 from inspect import Parameter
 from typing import (
@@ -18,10 +20,17 @@ from typing import (
 import dagster._check as check
 from dagster._builtins import Nothing
 from dagster._config import UserConfigSchema
-from dagster._core.decorator_utils import get_function_params, get_valid_name_permutations
+from dagster._core.decorator_utils import (
+    get_function_params,
+    get_valid_name_permutations,
+)
 from dagster._core.definitions.auto_materialize_policy import AutoMaterializePolicy
 from dagster._core.definitions.freshness_policy import FreshnessPolicy
-from dagster._core.definitions.metadata import ArbitraryMetadataMapping, MetadataUserInput
+from dagster._core.definitions.metadata import (
+    ArbitraryMetadataMapping,
+    MetadataUserInput,
+    MetadataValue,
+)
 from dagster._core.definitions.resource_annotation import (
     get_resource_args,
 )
@@ -326,6 +335,18 @@ class _Asset:
 
         asset_ins = build_asset_ins(fn, self.ins or {}, self.deps)
 
+        metadata = self.metadata or {}
+
+        if os.getenv("DAGSTER_ENABLE_CODE_LINKS", "false").lower() == "true":
+            cwd = os.getcwd()
+            origin_file = os.path.join(cwd, inspect.getsourcefile(fn))
+            origin_line = inspect.getsourcelines(fn)[1]
+
+            metadata = {
+                **(metadata),
+                "__code_origin": MetadataValue.json({"file": origin_file, "line": origin_line}),
+            }
+
         out_asset_key = (
             AssetKey(list(filter(None, [*(self.key_prefix or []), asset_name])))
             if not self.key
@@ -371,7 +392,7 @@ class _Asset:
             io_manager_key = cast(str, io_manager_key) if io_manager_key else DEFAULT_IO_MANAGER_KEY
 
             out = Out(
-                metadata=self.metadata or {},
+                metadata=metadata,
                 io_manager_key=io_manager_key,
                 dagster_type=self.dagster_type if self.dagster_type else NoValueSentinel,
                 description=self.description,
@@ -754,7 +775,11 @@ def build_asset_ins(
 
         ins_by_asset_key[asset_key] = (
             input_name.replace("-", "_"),
-            In(metadata=metadata, input_manager_key=input_manager_key, dagster_type=dagster_type),
+            In(
+                metadata=metadata,
+                input_manager_key=input_manager_key,
+                dagster_type=dagster_type,
+            ),
         )
 
     for asset_key in deps:
