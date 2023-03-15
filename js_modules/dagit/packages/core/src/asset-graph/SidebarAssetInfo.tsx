@@ -75,18 +75,19 @@ export const SidebarAssetInfo: React.FC<{
   const {assetMetadata, assetType} = metadataForAssetNode(asset);
   const hasAssetMetadata = assetType || assetMetadata.length > 0;
   const assetConfigSchema = asset.configField?.configType;
-  const codeOriginInfo = asset.metadataEntries.find((e) => e.label === '__code_origin');
+  const codeLinkMetadata = asset.op?.metadata.find((e) => e.key === '__code_origin')?.value;
 
-  const codeOrigin =
-    codeOriginInfo &&
-    codeOriginInfo.__typename === 'JsonMetadataEntry' &&
-    JSON.parse(codeOriginInfo.jsonString);
+  let codeLink = null;
+  if (codeLinkMetadata) {
+    const [codeLinkFile, codeLinkLineNumber] = codeLinkMetadata.split(':');
+    codeLink = <CodeLink file={codeLinkFile} lineNumber={parseInt(codeLinkLineNumber)} />;
+  }
 
   const OpMetadataPlugin = asset.op?.metadata && pluginForMetadata(asset.op.metadata);
 
   return (
     <>
-      <Header assetNode={definition} repoAddress={repoAddress} codeOrigin={codeOrigin} />
+      <Header assetNode={definition} repoAddress={repoAddress} codeLink={codeLink} />
 
       <AssetDefinedInMultipleReposNotice
         assetKey={assetKey}
@@ -193,8 +194,8 @@ const Header: React.FC<{
   assetNode: AssetNodeForGraphQueryFragment;
   opName?: string;
   repoAddress?: RepoAddress | null;
-  codeOrigin?: {file: string; line: number};
-}> = ({assetNode, repoAddress, codeOrigin}) => {
+  codeLink?: React.ReactNode;
+}> = ({assetNode, repoAddress, codeLink}) => {
   const displayName = displayNameForAssetKey(assetNode.assetKey);
 
   return (
@@ -210,7 +211,7 @@ const Header: React.FC<{
         >
           <Box>{displayName}</Box>
         </SidebarTitle>
-        {codeOrigin && <CodeLink file={codeOrigin.file} lineNumber={codeOrigin.line} />}
+        {codeLink}
       </Box>
       <Box flex={{direction: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
         <AssetCatalogLink to={assetDetailsPathForKey(assetNode.assetKey)}>
