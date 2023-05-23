@@ -337,7 +337,7 @@ class _Asset:
 
         # Attach code origins as metadata to the asset
         cwd = os.getcwd()
-        origin_file = os.path.join(cwd, inspect.getsourcefile(fn))
+        origin_file = os.path.join(cwd, inspect.getsourcefile(fn))  # type: ignore
         origin_line = inspect.getsourcelines(fn)[1]
 
         out_asset_key = (

@@ -90,7 +90,7 @@ class _Op:
 
         # Attach code origin to op tags
         cwd = os.getcwd()
-        origin_file = os.path.join(cwd, inspect.getsourcefile(fn))
+        origin_file = os.path.join(cwd, inspect.getsourcefile(fn))  # type: ignore
         origin_line = inspect.getsourcelines(fn)[1]
 
         tags = {**(self.tags or {}), CODE_ORIGIN_TAG_NAME: f"{origin_file}:{origin_line}"}
