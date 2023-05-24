@@ -47,7 +47,7 @@ def a_repo():
     return [foo_job]
 
 
-def test_external_repository_data(snapshot):
+def test_external_repository_data(snapshot, ignore_code_origin):
     @repository
     def repo():
         return [foo_job, foo_schedule]
@@ -75,7 +75,7 @@ def test_external_repository_data(snapshot):
     snapshot.assert_match(serialize_pp(external_repo_data))
 
 
-def test_external_job_data(snapshot):
+def test_external_job_data(snapshot, ignore_code_origin):
     snapshot.assert_match(serialize_pp(external_job_data_from_def(foo_job)))
 
 

@@ -12,6 +12,7 @@ from dagster import (
     op,
     reconstructable,
 )
+from dagster._core.definitions.decorators.op_decorator import CODE_ORIGIN_TAG_NAME
 from dagster._core.errors import DagsterExecutionStepNotFoundError
 from dagster._core.execution.api import create_execution_plan
 from dagster._core.execution.plan.state import KnownExecutionState
@@ -240,10 +241,16 @@ def test_tags():
     assert plan.get_step_by_key(emit.name).tags == {"first": "1"}
 
     for mapping_key in range(3):
-        assert plan.get_step_by_key(f"{multiply_inputs.name}[{mapping_key}]").tags == {
-            "second": "2"
-        }
-        assert plan.get_step_by_key(f"{multiply_by_two.name}[{mapping_key}]").tags == {"third": "3"}
+        assert {
+            k: v
+            for k, v in plan.get_step_by_key(f"{multiply_inputs.name}[{mapping_key}]").tags
+            if k != CODE_ORIGIN_TAG_NAME
+        } == {"second": "2"}
+        assert {
+            k: v
+            for k, v in plan.get_step_by_key(f"{multiply_by_two.name}[{mapping_key}]").tags
+            if k != CODE_ORIGIN_TAG_NAME
+        } == {"third": "3"}
 
 
 def test_full_reexecute():

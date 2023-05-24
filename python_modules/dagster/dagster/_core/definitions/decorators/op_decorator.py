@@ -43,6 +43,11 @@ if TYPE_CHECKING:
     from ..op_definition import OpDefinition
 
 CODE_ORIGIN_TAG_NAME = "__code_origin"
+CODE_ORIGIN_ENABLED = [True]
+
+
+def is_code_origin_enabled():
+    return CODE_ORIGIN_ENABLED[0]
 
 
 class _Op:
@@ -93,7 +98,12 @@ class _Op:
         origin_file = os.path.join(cwd, inspect.getsourcefile(fn))  # type: ignore
         origin_line = inspect.getsourcelines(fn)[1]
 
-        tags = {**(self.tags or {}), CODE_ORIGIN_TAG_NAME: f"{origin_file}:{origin_line}"}
+        code_origin_tag = (
+            {CODE_ORIGIN_TAG_NAME: f"{origin_file}:{origin_line}"}
+            if is_code_origin_enabled()
+            else {}
+        )
+        tags = {**(self.tags or {}), **code_origin_tag}
 
         compute_fn = (
             DecoratedOpFunction(decorated_fn=fn)
