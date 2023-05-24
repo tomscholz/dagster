@@ -3,6 +3,7 @@ import subprocess
 
 import dbt.version
 import pytest
+from dagster._core.definitions.decorators.op_decorator import CODE_ORIGIN_ENABLED
 from dagster._utils import file_relative_path, pushd
 from dagster_dbt import DbtCliClientResource, DbtCliResource, dbt_cli_resource
 from packaging import version
@@ -89,3 +90,12 @@ def dbt_build(dbt_executable, dbt_config_dir):
     with pushd(TEST_PROJECT_DIR):
         subprocess.run([dbt_executable, "seed", "--profiles-dir", dbt_config_dir], check=True)
         subprocess.run([dbt_executable, "run", "--profiles-dir", dbt_config_dir], check=True)
+
+
+@pytest.fixture(autouse=True)
+def ignore_code_origin():
+    CODE_ORIGIN_ENABLED[0] = False
+
+    yield
+
+    CODE_ORIGIN_ENABLED[0] = True

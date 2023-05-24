@@ -2,6 +2,7 @@ import os
 from typing import TYPE_CHECKING
 
 import pytest
+from dagster._core.definitions.decorators.op_decorator import CODE_ORIGIN_ENABLED
 from syrupy.extensions.amber import AmberSnapshotExtension
 
 if TYPE_CHECKING:
@@ -34,3 +35,12 @@ class SharedSnapshotExtension(AmberSnapshotExtension):
 @pytest.fixture
 def snapshot(snapshot):
     return snapshot.use_extension(SharedSnapshotExtension)
+
+
+@pytest.fixture
+def ignore_code_origin():
+    CODE_ORIGIN_ENABLED[0] = False
+
+    yield
+
+    CODE_ORIGIN_ENABLED[0] = True
