@@ -1,9 +1,9 @@
 import pytest
 from airflow import __version__ as airflow_version
 from airflow.models.dag import DAG
-from airflow.operators.dummy_operator import DummyOperator  # type: ignore
+from airflow.operators.dummy_operator import DummyOperator
 from airflow.utils.dates import days_ago
-from dagster._core.definitions.decorators.op_decorator import CODE_ORIGIN_ENABLED
+from dagster._core.definitions.decorators.op_decorator import do_not_attach_code_origin
 
 if airflow_version >= "2.0.0":
     from airflow.models.baseoperator import chain
@@ -25,11 +25,8 @@ default_args = {
 
 @pytest.fixture
 def ignore_code_origin():
-    CODE_ORIGIN_ENABLED[0] = False
-
-    yield
-
-    CODE_ORIGIN_ENABLED[0] = True
+    with do_not_attach_code_origin():
+        yield
 
 
 @requires_no_db

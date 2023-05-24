@@ -229,7 +229,7 @@ def test_composite_wrapping():
     assert result.output_for_node("outer") == {"0": 0, "1": 1, "2": 2}
 
 
-def test_tags():
+def test_tags(ignore_code_origin):
     known_state = KnownExecutionState(
         {},
         {

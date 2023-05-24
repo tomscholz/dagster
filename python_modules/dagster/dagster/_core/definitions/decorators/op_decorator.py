@@ -1,11 +1,13 @@
 import inspect
 import os
+from contextlib import contextmanager
 from functools import lru_cache, update_wrapper
 from inspect import Parameter
 from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
+    Generator,
     List,
     Mapping,
     NamedTuple,
@@ -44,6 +46,15 @@ if TYPE_CHECKING:
 
 CODE_ORIGIN_TAG_NAME = "__code_origin"
 CODE_ORIGIN_ENABLED = [True]
+
+
+@contextmanager
+def do_not_attach_code_origin() -> Generator[None, None, None]:
+    CODE_ORIGIN_ENABLED[0] = False
+    try:
+        yield
+    finally:
+        CODE_ORIGIN_ENABLED[0] = True
 
 
 def is_code_origin_enabled():

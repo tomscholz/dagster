@@ -1,7 +1,7 @@
 import pytest
 import responses
 from dagster import AssetKey, DagsterStepOutputNotFoundError
-from dagster._core.definitions.decorators.op_decorator import CODE_ORIGIN_ENABLED
+from dagster._core.definitions.decorators.op_decorator import do_not_attach_code_origin
 from dagster._legacy import build_assets_job
 from dagster_fivetran import fivetran_resource
 from dagster_fivetran.asset_defs import build_fivetran_assets
@@ -22,11 +22,8 @@ from .utils import (
 
 @pytest.fixture
 def ignore_code_origin():
-    CODE_ORIGIN_ENABLED[0] = False
-
-    yield
-
-    CODE_ORIGIN_ENABLED[0] = True
+    with do_not_attach_code_origin():
+        yield
 
 
 def test_fivetran_asset_keys():
