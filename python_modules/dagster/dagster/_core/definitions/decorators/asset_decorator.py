@@ -335,7 +335,8 @@ class _Asset:
 
         asset_ins = build_asset_ins(fn, self.ins or {}, self.deps)
 
-        # Attach code origins as metadata to the asset
+        # Attempt to fetch information about where the asset is defined in code,
+        # which we'll attach as a tag to the asset
         cwd = os.getcwd()
 
         origin_file = None

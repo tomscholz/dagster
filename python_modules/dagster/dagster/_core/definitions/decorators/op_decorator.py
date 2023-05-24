@@ -45,11 +45,17 @@ if TYPE_CHECKING:
     from ..op_definition import OpDefinition
 
 CODE_ORIGIN_TAG_NAME = "__code_origin"
+
+
+# global var flag to enable/disable attaching code origin to ops and assets
 CODE_ORIGIN_ENABLED = [True]
 
 
 @contextmanager
 def do_not_attach_code_origin() -> Generator[None, None, None]:
+    """Disables attaching code origin to ops and assets. This is useful for testing, because code
+    origin can change from environment to environment and break snapshot tests.
+    """
     CODE_ORIGIN_ENABLED[0] = False
     try:
         yield
@@ -104,9 +110,9 @@ class _Op:
         if not self.name:
             self.name = fn.__name__
 
-        # Attach code origin to op tags
+        # Attempt to fetch information about where the op is defined in code,
+        # which we'll attach as a tag to the op
         cwd = os.getcwd()
-
         origin_file = None
         origin_line = None
         try:

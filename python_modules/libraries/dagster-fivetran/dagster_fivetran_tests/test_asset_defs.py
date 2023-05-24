@@ -22,6 +22,8 @@ from .utils import (
 
 @pytest.fixture
 def ignore_code_origin():
+    # avoid attaching code origin metadata to ops/assets, because this can change from environment
+    # to environment and break snapshot tests
     with do_not_attach_code_origin():
         yield
 
