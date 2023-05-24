@@ -1,7 +1,7 @@
 import pytest
 from airflow import __version__ as airflow_version
 from airflow.models.dag import DAG
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.dummy_operator import DummyOperator  # type: ignore
 from airflow.utils.dates import days_ago
 from dagster._core.definitions.decorators.op_decorator import do_not_attach_code_origin
 
