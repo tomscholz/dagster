@@ -337,8 +337,14 @@ class _Asset:
 
         # Attach code origins as metadata to the asset
         cwd = os.getcwd()
-        origin_file = os.path.join(cwd, inspect.getsourcefile(fn))  # type: ignore
-        origin_line = inspect.getsourcelines(fn)[1]
+
+        origin_file = None
+        origin_line = None
+        try:
+            origin_file = os.path.join(cwd, inspect.getsourcefile(fn))  # type: ignore
+            origin_line = inspect.getsourcelines(fn)[1]
+        except TypeError:
+            pass
 
         out_asset_key = (
             AssetKey(list(filter(None, [*(self.key_prefix or []), asset_name])))
@@ -401,7 +407,7 @@ class _Asset:
                         {"file": origin_file, "line": origin_line}
                     )
                 }
-                if is_code_origin_enabled()
+                if is_code_origin_enabled() and origin_file and origin_line
                 else {}
             )
 
