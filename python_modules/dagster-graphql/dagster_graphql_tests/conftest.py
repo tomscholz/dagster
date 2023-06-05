@@ -38,6 +38,7 @@ class SharedSnapshotExtension(AmberSnapshotExtension):
 def snapshot(snapshot):
     return snapshot.use_extension(SharedSnapshotExtension)
 
+
 @pytest.fixture
 def ignore_code_origin():
     # avoid attaching code origin metadata to ops/assets, because this can change from environment

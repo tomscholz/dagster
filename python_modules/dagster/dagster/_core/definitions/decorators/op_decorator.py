@@ -7,6 +7,7 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
+    Dict,
     Generator,
     List,
     Mapping,
@@ -100,15 +101,14 @@ class _Op:
         self.ins = check.opt_nullable_mapping_param(ins, "ins", key_type=str, value_type=In)
         self.out = out
 
-    def __call__(self, fn: Callable[..., Any]) -> "OpDefinition":
-        from dagster._config.pythonic_config import validate_resource_annotated_function
-
-        from ..op_definition import OpDefinition
-
-        validate_resource_annotated_function(fn)
-
-        if not self.name:
-            self.name = fn.__name__
+    def get_code_origin_tags(self, fn: Callable) -> Dict[str, Any]:
+        """Generates the code origin tag for an op. This is a dictionary with a single key, __code_origin,
+        whose value is a string of the form "<file>:<line>" where <file> is the path to the file where
+        the op is defined and <line> is the line number on which the op is defined. This tag is used
+        to link to the location of the op in the user's editor from Dagit.
+        """
+        if not is_code_origin_enabled():
+            return {}
 
         # Attempt to fetch information about where the op is defined in code,
         # which we'll attach as a tag to the op
@@ -119,14 +119,21 @@ class _Op:
             origin_file = os.path.join(cwd, inspect.getsourcefile(fn))  # type: ignore
             origin_line = inspect.getsourcelines(fn)[1]
         except TypeError:
-            pass
+            return {}
 
-        code_origin_tag = (
-            {CODE_ORIGIN_TAG_NAME: f"{origin_file}:{origin_line}"}
-            if is_code_origin_enabled() and origin_file and origin_line
-            else {}
-        )
-        tags = {**(self.tags or {}), **code_origin_tag}
+        return {CODE_ORIGIN_TAG_NAME: f"{origin_file}:{origin_line}"}
+
+    def __call__(self, fn: Callable[..., Any]) -> "OpDefinition":
+        from dagster._config.pythonic_config import validate_resource_annotated_function
+
+        from ..op_definition import OpDefinition
+
+        validate_resource_annotated_function(fn)
+
+        if not self.name:
+            self.name = fn.__name__
+
+        tags = {**(self.tags or {}), **self.get_code_origin_tags(fn)}
 
         compute_fn = (
             DecoratedOpFunction(decorated_fn=fn)
