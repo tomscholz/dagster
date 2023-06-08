@@ -118,10 +118,16 @@ class _Op:
         try:
             origin_file = os.path.join(cwd, inspect.getsourcefile(fn))  # type: ignore
             origin_line = inspect.getsourcelines(fn)[1]
+            module = inspect.getmodule(fn)
+            module_name = module.__name__ if module else ""
+            path_from_module_root = origin_file[origin_file.index(module_name.replace(".", "/")) :]
+            path_to_module_root = origin_file[: -len(path_from_module_root)]
         except TypeError:
             return {}
 
-        return {CODE_ORIGIN_TAG_NAME: f"{origin_file}:{origin_line}"}
+        return {
+            CODE_ORIGIN_TAG_NAME: f"{path_to_module_root}:{path_from_module_root}:{origin_line}"
+        }
 
     def __call__(self, fn: Callable[..., Any]) -> "OpDefinition":
         from dagster._config.pythonic_config import validate_resource_annotated_function

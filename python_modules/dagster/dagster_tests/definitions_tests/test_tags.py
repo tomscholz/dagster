@@ -1,4 +1,5 @@
 import inspect
+import os
 
 from dagster import job, op
 from dagster._core.definitions.decorators.op_decorator import CODE_ORIGIN_TAG_NAME
@@ -6,7 +7,8 @@ from dagster._utils import file_relative_path
 
 
 def _code_origin_tag(line_no: int) -> str:
-    return file_relative_path(__file__, f"test_tags.py:{line_no}")
+    dagster_module_path = os.path.normpath(file_relative_path(__file__, "../../")) + "/"
+    return f"{dagster_module_path}:dagster_tests/definitions_tests/test_tags.py:{line_no}"
 
 
 def test_op_tags():

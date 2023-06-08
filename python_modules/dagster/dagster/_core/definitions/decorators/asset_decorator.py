@@ -1,5 +1,3 @@
-import inspect
-import os
 import warnings
 from inspect import Parameter
 from typing import (
@@ -29,7 +27,6 @@ from dagster._core.definitions.freshness_policy import FreshnessPolicy
 from dagster._core.definitions.metadata import (
     ArbitraryMetadataMapping,
     MetadataUserInput,
-    MetadataValue,
 )
 from dagster._core.definitions.resource_annotation import (
     get_resource_args,
@@ -425,7 +422,6 @@ class _Asset:
                 tags={
                     **({"kind": self.compute_kind} if self.compute_kind else {}),
                     **(self.op_tags or {}),
-                    **self.get_code_origin_tags(fn),
                 },
                 config_schema=self.config_schema,
                 retry_policy=self.retry_policy,

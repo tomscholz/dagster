@@ -1,4 +1,5 @@
 import inspect
+import os
 import warnings
 
 import pytest
@@ -26,7 +27,8 @@ from dagster._utils import file_relative_path
 
 
 def _code_origin_tag(line_no: int) -> str:
-    return file_relative_path(__file__, f"test_composition.py:{line_no}")
+    dagster_module_path = os.path.normpath(file_relative_path(__file__, "../../")) + "/"
+    return f"{dagster_module_path}:dagster_tests/definitions_tests/test_composition.py:{line_no}"
 
 
 def builder(graph):
