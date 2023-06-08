@@ -113,14 +113,21 @@ class _Op:
         # Attempt to fetch information about where the op is defined in code,
         # which we'll attach as a tag to the op
         cwd = os.getcwd()
-        origin_file = None
+        origin_file: Optional[str] = None
         origin_line = None
         try:
             origin_file = os.path.join(cwd, inspect.getsourcefile(fn))  # type: ignore
+            origin_file = check.not_none(origin_file)
             origin_line = inspect.getsourcelines(fn)[1]
             module = inspect.getmodule(fn)
             module_name = module.__name__ if module else ""
-            path_from_module_root = origin_file[origin_file.index(module_name.replace(".", "/")) :]
+
+            try:
+                module_idx = origin_file.index(module_name.replace(".", "/"))
+            except IndexError:
+                module_idx = 0
+
+            path_from_module_root = origin_file[module_idx:]
             path_to_module_root = origin_file[: -len(path_from_module_root)]
         except TypeError:
             return {}
