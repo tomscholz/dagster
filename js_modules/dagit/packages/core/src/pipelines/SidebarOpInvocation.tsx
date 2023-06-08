@@ -24,8 +24,15 @@ export const SidebarOpInvocation: React.FC<ISidebarOpInvocationProps> = (props) 
   const codeLinkMetadata = solid.definition.metadata.find((m) => m.key === '__code_origin')?.value;
   let codeLink = null;
   if (codeLinkMetadata) {
-    const [codeLinkFile, codeLinkLineNumber] = codeLinkMetadata.split(':');
-    codeLink = <CodeLink file={codeLinkFile} lineNumber={parseInt(codeLinkLineNumber)} />;
+    const [codeLinkPathToModule, codeLinkPathInModule, codeLinkLineNumber] = codeLinkMetadata.split(
+      ':',
+    );
+    codeLink = (
+      <CodeLink
+        file={codeLinkPathToModule + codeLinkPathInModule}
+        lineNumber={parseInt(codeLinkLineNumber)}
+      />
+    );
   }
   return (
     <div>

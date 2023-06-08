@@ -79,8 +79,15 @@ export const SidebarAssetInfo: React.FC<{
 
   let codeLink = null;
   if (codeLinkMetadata) {
-    const [codeLinkFile, codeLinkLineNumber] = codeLinkMetadata.split(':');
-    codeLink = <CodeLink file={codeLinkFile} lineNumber={parseInt(codeLinkLineNumber)} />;
+    const [codeLinkPathToModule, codeLinkPathInModule, codeLinkLineNumber] = codeLinkMetadata.split(
+      ':',
+    );
+    codeLink = (
+      <CodeLink
+        file={codeLinkPathToModule + codeLinkPathInModule}
+        lineNumber={parseInt(codeLinkLineNumber)}
+      />
+    );
   }
 
   const OpMetadataPlugin = asset.op?.metadata && pluginForMetadata(asset.op.metadata);
