@@ -6,7 +6,8 @@ from dagster._utils import file_relative_path
 
 
 def test_asset_code_origins():
-    from . import asset_package
+    from dagster_tests.asset_defs_tests import asset_package
+
     from .asset_package import module_with_assets
 
     collection_1 = load_assets_from_modules([asset_package, module_with_assets])

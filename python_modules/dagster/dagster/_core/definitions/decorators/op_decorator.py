@@ -1,8 +1,10 @@
 import inspect
 import os
+import sys
 from contextlib import contextmanager
 from functools import lru_cache, update_wrapper
 from inspect import Parameter
+from types import ModuleType
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -68,6 +70,16 @@ def is_code_origin_enabled():
     return CODE_ORIGIN_ENABLED[0]
 
 
+def _get_root_module(module: ModuleType) -> ModuleType:
+    module_name_split = module.__name__.split(".")
+    for i in range(1, len(module_name_split)):
+        try:
+            return sys.modules[".".join(module_name_split[:i])]
+        except KeyError:
+            continue
+    return module
+
+
 class _Op:
     def __init__(
         self,
@@ -116,24 +128,27 @@ class _Op:
         origin_file: Optional[str] = None
         origin_line = None
         try:
-            origin_file = os.path.join(cwd, inspect.getsourcefile(fn))  # type: ignore
+            origin_file = os.path.abspath(os.path.join(cwd, inspect.getsourcefile(fn)))  # type: ignore
             origin_file = check.not_none(origin_file)
             origin_line = inspect.getsourcelines(fn)[1]
+
+            # Get the base module that the op function is defined in
+            # and find the filepath to that module
             module = inspect.getmodule(fn)
-            module_name = module.__name__ if module else ""
+            root_module = _get_root_module(module) if module else None
+            path_to_module_root = (
+                os.path.abspath(os.path.dirname(os.path.dirname(root_module.__file__)))
+                if root_module and root_module.__file__
+                else "/"
+            )
 
-            try:
-                module_idx = origin_file.index(module_name.replace(".", "/"))
-            except IndexError:
-                module_idx = 0
-
-            path_from_module_root = origin_file[module_idx:]
-            path_to_module_root = origin_file[: -len(path_from_module_root)]
+            # Figure out where in the module the op function is defined
+            path_from_module_root = os.path.relpath(origin_file, path_to_module_root)
         except TypeError:
             return {}
 
         return {
-            CODE_ORIGIN_TAG_NAME: f"{path_to_module_root}:{path_from_module_root}:{origin_line}"
+            CODE_ORIGIN_TAG_NAME: f"{path_to_module_root}/:{path_from_module_root}:{origin_line}"
         }
 
     def __call__(self, fn: Callable[..., Any]) -> "OpDefinition":
