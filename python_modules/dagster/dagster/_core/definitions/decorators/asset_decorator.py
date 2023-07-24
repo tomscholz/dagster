@@ -45,7 +45,7 @@ from ..asset_out import AssetOut
 from ..assets import AssetsDefinition
 from ..backfill_policy import BackfillPolicy, BackfillPolicyType
 from ..decorators.graph_decorator import graph
-from ..decorators.op_decorator import CODE_ORIGIN_TAG_NAME, _Op, is_code_origin_enabled
+from ..decorators.op_decorator import _Op
 from ..events import AssetKey, CoercibleToAssetKey, CoercibleToAssetKeyPrefix
 from ..input import In
 from ..output import GraphOut, Out
@@ -321,30 +321,7 @@ class _Asset:
 
         self.key = AssetKey.from_coercible(key) if key is not None else None
 
-    def get_code_origin_tags(self, fn: Callable) -> Dict[str, Any]:
-        """Generates the code origin tag for an op. This is a dictionary with a single key, __code_origin,
-        whose value is a JSON-encoded dictionary with keys file and line, indicating where the asset is defined.
-        This tag is used to link to the location of the asset in the user's editor from Dagit.
-        """
-        if not is_code_origin_enabled():
-            return {}
-
-        # Attempt to fetch information about where the asset is defined in code,
-        # which we'll attach as a tag to the asset
-        cwd = os.getcwd()
-
-        origin_file = None
-        origin_line = None
-        try:
-            origin_file = os.path.join(cwd, inspect.getsourcefile(fn))  # type: ignore
-            origin_line = inspect.getsourcelines(fn)[1]
-        except TypeError:
-            return {}
-
-        return {
-            CODE_ORIGIN_TAG_NAME: MetadataValue.json({"file": origin_file, "line": origin_line})
-        }
-
+    
     def __call__(self, fn: Callable) -> AssetsDefinition:
         from dagster._config.pythonic_config import (
             validate_resource_annotated_function,
