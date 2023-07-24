@@ -321,7 +321,6 @@ class _Asset:
 
         self.key = AssetKey.from_coercible(key) if key is not None else None
 
-    
     def __call__(self, fn: Callable) -> AssetsDefinition:
         from dagster._config.pythonic_config import (
             validate_resource_annotated_function,
