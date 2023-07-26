@@ -21,3 +21,30 @@ export const CodeLink: React.FC<{file: string; lineNumber: number}> = ({file, li
     </ExternalAnchorButton>
   );
 };
+
+export const VersionControlCodeLink: React.FC<{
+  versionControlUrl: string;
+  pathInModule: string;
+  lineNumber: number;
+}> = ({versionControlUrl, pathInModule, lineNumber}) => {
+  const codeLink = versionControlUrl + '/' + pathInModule + '#L' + lineNumber.toString();
+
+  if (versionControlUrl.includes('github.com')) {
+    return (
+      <ExternalAnchorButton icon={<Icon name="github" />} href={codeLink}>
+        Open in GitHub
+      </ExternalAnchorButton>
+    );
+  } else if (versionControlUrl.includes('gitlab.com')) {
+    return (
+      <ExternalAnchorButton icon={<Icon name="gitlab" />} href={codeLink}>
+        Open in GitLab
+      </ExternalAnchorButton>
+    );
+  }
+  return (
+    <ExternalAnchorButton icon={<Icon name="open_in_new" />} href={codeLink}>
+      Open source
+    </ExternalAnchorButton>
+  );
+};

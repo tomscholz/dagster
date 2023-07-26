@@ -14,6 +14,7 @@ const DEFAULT_PROTOCOL = {protocol: Object.keys(POPULAR_PROTOCOLS)[0]!, custom: 
 
 type ProtocolData = {
   protocol: string;
+  s;
   custom: boolean;
 };
 
