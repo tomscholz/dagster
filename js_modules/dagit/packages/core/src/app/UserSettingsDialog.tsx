@@ -112,7 +112,7 @@ const UserSettingsDialogContent: React.FC<DialogContentProps> = ({onClose, visib
     ),
   }));
 
-  const {codeLinksEnabled, telemetryEnabled} = React.useContext(AppContext);
+  const {codeLinksEnabled} = React.useContext(AppContext);
 
   if (codeLinksEnabled) {
     experimentalRows = experimentalRows.concat([
