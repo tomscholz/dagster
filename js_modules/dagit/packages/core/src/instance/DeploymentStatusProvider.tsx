@@ -19,14 +19,14 @@ export const DeploymentStatusContext = React.createContext<DeploymentStatus>({
 
 interface Props {
   children: React.ReactNode;
-  include: Set<DeploymentStatusType>;
+  include: Set<DeploymentStatusType> | undefined;
 }
 
 export const DeploymentStatusProvider: React.FC<Props> = (props) => {
   const {children, include} = props;
 
-  const codeLocations = useCodeLocationsStatus(!include.has('code-locations'));
-  const daemons = useDaemonStatus(!include.has('daemons'));
+  const codeLocations = useCodeLocationsStatus(!include || !include.has('code-locations'));
+  const daemons = useDaemonStatus(!include || !include.has('daemons'));
 
   const value = React.useMemo(() => ({codeLocations, daemons}), [daemons, codeLocations]);
 
