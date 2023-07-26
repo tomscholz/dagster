@@ -27,12 +27,14 @@ export const SidebarOpInvocation: React.FC<ISidebarOpInvocationProps> = (props) 
     const [codeLinkPathToModule, codeLinkPathInModule, codeLinkLineNumber] = codeLinkMetadata.split(
       ':',
     );
-    codeLink = (
-      <CodeLink
-        file={codeLinkPathToModule + codeLinkPathInModule}
-        lineNumber={parseInt(codeLinkLineNumber)}
-      />
-    );
+    if (codeLinkPathToModule && codeLinkPathInModule && codeLinkLineNumber) {
+      codeLink = (
+        <CodeLink
+          file={codeLinkPathToModule + codeLinkPathInModule}
+          lineNumber={parseInt(codeLinkLineNumber)}
+        />
+      );
+    }
   }
   return (
     <div>
