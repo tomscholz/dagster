@@ -14,6 +14,7 @@ from dagster import (
     LastPartitionMapping,
     PartitionMapping,
     PartitionsDefinition,
+    StaticPartitionsDefinition,
     TimeWindowPartitionMapping,
     asset,
 )
@@ -208,18 +209,57 @@ def test_io_manager_key(io_manager_key: Optional[str]) -> None:
         assert output_def.io_manager_key == expected_io_manager_key
 
 
-def test_backfill_policy():
-    backfill_policy = BackfillPolicy.single_run()
+@pytest.mark.parametrize(
+    ["partitions_def", "backfill_policy", "expected_backfill_policy"],
+    [
+        (
+            DailyPartitionsDefinition(start_date="2023-01-01"),
+            BackfillPolicy.single_run(),
+            BackfillPolicy.single_run(),
+        ),
+        (
+            DailyPartitionsDefinition(start_date="2023-01-01"),
+            None,
+            BackfillPolicy.single_run(),
+        ),
+        (
+            StaticPartitionsDefinition(partition_keys=["A", "B"]),
+            None,
+            BackfillPolicy.multi_run(),
+        ),
+        (
+            StaticPartitionsDefinition(partition_keys=["A", "B"]),
+            BackfillPolicy.single_run(),
+            BackfillPolicy.single_run(),
+        ),
+    ],
+    ids=[
+        "use explicit backfill policy",
+        "time window defaults to single run",
+        "static defaults to multi run",
+        "explicit backfill policy overrides default",
+    ],
+)
+def test_backfill_policy(
+    partitions_def: PartitionsDefinition,
+    backfill_policy: BackfillPolicy,
+    expected_backfill_policy: BackfillPolicy,
+) -> None:
+    class CustomDagsterDbtTranslator(DagsterDbtTranslator):
+        @classmethod
+        def get_freshness_policy(cls, _: Mapping[str, Any]) -> Optional[FreshnessPolicy]:
+            return None
 
     @dbt_assets(
         manifest=manifest,
-        partitions_def=DailyPartitionsDefinition(start_date="2023-01-01"),
+        partitions_def=partitions_def,
         backfill_policy=backfill_policy,
+        dagster_dbt_translator=CustomDagsterDbtTranslator(),
     )
     def my_dbt_assets():
         ...
 
-    assert my_dbt_assets.backfill_policy == backfill_policy
+    assert my_dbt_assets.backfill_policy == expected_backfill_policy
 
 
 def test_op_tags():

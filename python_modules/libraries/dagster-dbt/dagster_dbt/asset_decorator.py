@@ -20,6 +20,8 @@ from dagster import (
     DagsterInvalidDefinitionError,
     Nothing,
     PartitionsDefinition,
+    StaticPartitionsDefinition,
+    TimeWindowPartitionsDefinition,
     multi_asset,
 )
 from dagster._utils.warnings import (
@@ -80,7 +82,9 @@ def dbt_assets(
         dagster_dbt_translator (Optional[DagsterDbtTranslator]): Allows customizing how to map
             dbt models, seeds, etc. to asset keys and asset metadata.
         backfill_policy (Optional[BackfillPolicy]): If a partitions_def is defined, this determines
-            how to execute backfills that target multiple partitions.
+            how to execute backfills that target multiple partitions. If a time window partition
+            definition is used, this parameter defaults to a single-run policy. If a static
+            partition definition is used, this parameter defaults to a multi-run policy.
         op_tags (Optional[Dict[str, Any]]): A dictionary of tags for the op that computes the assets.
             Frameworks may expect and require certain metadata to be attached to a op. Values that
             are not strings will be json encoded and must meet the criteria that
@@ -298,6 +302,12 @@ def dbt_assets(
         **({"dagster-dbt/exclude": exclude} if exclude else {}),
         **(op_tags if op_tags else {}),
     }
+
+    if partitions_def and not backfill_policy:
+        if isinstance(partitions_def, TimeWindowPartitionsDefinition):
+            backfill_policy = BackfillPolicy.single_run()
+        elif isinstance(partitions_def, StaticPartitionsDefinition):
+            backfill_policy = BackfillPolicy.multi_run()
 
     def inner(fn) -> AssetsDefinition:
         asset_definition = multi_asset(
