@@ -405,6 +405,9 @@ class AssetDaemonScenarioState(NamedTuple):
             list(
                 AssetDaemon(pre_sensor_interval_seconds=42)._run_iteration_impl(  # noqa: SLF001
                     workspace_context,
+                    threadpool_executor=None,
+                    amp_tick_futures={},
+                    last_submit_times={},
                     debug_crash_flags={},
                     sensor_state_lock=threading.Lock(),
                 )
