@@ -5,6 +5,7 @@ from dagster import (
     AssetKey,
     _check as check,
 )
+from dagster._core.definitions.asset_spec import AssetExecutionType
 from dagster._core.definitions.data_time import CachingDataTimeResolver
 from dagster._core.definitions.data_version import (
     NULL_DATA_VERSION,
@@ -238,6 +239,7 @@ class GrapheneAssetNode(graphene.ObjectType):
     groupName = graphene.String()
     id = graphene.NonNull(graphene.ID)
     isExecutable = graphene.NonNull(graphene.Boolean)
+    isExternal = graphene.NonNull(graphene.Boolean)
     isObservable = graphene.NonNull(graphene.Boolean)
     isPartitioned = graphene.NonNull(graphene.Boolean)
     isSource = graphene.NonNull(graphene.Boolean)
@@ -479,7 +481,8 @@ class GrapheneAssetNode(graphene.ObjectType):
         return self.graphName is not None
 
     def is_source_asset(self) -> bool:
-        return self._external_asset_node.is_source
+        node = self._external_asset_node
+        return node.is_source or node.is_external and len(node.dependencies) == 0
 
     def resolve_hasMaterializePermission(
         self,
@@ -865,7 +868,10 @@ class GrapheneAssetNode(graphene.ObjectType):
         return self._external_asset_node.partitions_def_data is not None
 
     def resolve_isObservable(self, _graphene_info: ResolveInfo) -> bool:
-        return self._external_asset_node.is_observable
+        return self._external_asset_node.execution_type == AssetExecutionType.OBSERVATION
+
+    def resolve_isExternal(self, _graphene_info: ResolveInfo) -> bool:
+        return self._external_asset_node.is_external
 
     def resolve_isExecutable(self, _graphene_info: ResolveInfo) -> bool:
         return self._external_asset_node.is_executable

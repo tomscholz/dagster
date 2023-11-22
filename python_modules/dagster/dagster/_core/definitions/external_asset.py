@@ -7,8 +7,10 @@ from dagster._core.definitions.asset_spec import (
     AssetSpec,
 )
 from dagster._core.definitions.assets import AssetsDefinition
+from dagster._core.definitions.auto_materialize_policy import AutoMaterializePolicy
 from dagster._core.definitions.decorators.asset_decorator import asset, multi_asset
 from dagster._core.definitions.events import Output
+from dagster._core.definitions.freshness_policy import FreshnessPolicy
 from dagster._core.definitions.source_asset import (
     SYSTEM_METADATA_KEY_SOURCE_ASSET_OBSERVATION,
     SourceAsset,
@@ -16,6 +18,16 @@ from dagster._core.definitions.source_asset import (
 )
 from dagster._core.errors import DagsterInvariantViolationError
 from dagster._core.execution.context.compute import AssetExecutionContext
+
+
+def is_external_asset(assets_def: AssetsDefinition) -> bool:
+    # All keys will have this have the metadata marker if any do.
+    first_key = next(iter(assets_def.keys))
+    metadata = assets_def.metadata_by_key.get(first_key, {})
+    return metadata[SYSTEM_METADATA_KEY_ASSET_EXECUTION_TYPE] in [
+        AssetExecutionType.UNEXECUTABLE.value,
+        AssetExecutionType.OBSERVATION.value,
+    ]
 
 
 def external_asset_from_spec(spec: AssetSpec) -> AssetsDefinition:
@@ -133,16 +145,16 @@ def external_assets_from_specs(specs: Sequence[AssetSpec]) -> List[AssetsDefinit
 
 
 def create_external_asset_from_source_asset(source_asset: SourceAsset) -> AssetsDefinition:
-    check.invariant(
-        source_asset.auto_observe_interval_minutes is None,
-        "Automatically observed external assets not supported yet: auto_observe_interval_minutes"
-        " should be None",
-    )
-
     injected_metadata = (
         {SYSTEM_METADATA_KEY_ASSET_EXECUTION_TYPE: AssetExecutionType.UNEXECUTABLE.value}
         if source_asset.observe_fn is None
         else {SYSTEM_METADATA_KEY_ASSET_EXECUTION_TYPE: AssetExecutionType.OBSERVATION.value}
+    )
+
+    freshness_policy = (
+        FreshnessPolicy(maximum_lag_minutes=source_asset.auto_observe_interval_minutes)
+        if source_asset.auto_observe_interval_minutes
+        else None
     )
 
     kwargs = {
@@ -154,6 +166,8 @@ def create_external_asset_from_source_asset(source_asset: SourceAsset) -> Assets
         "group_name": source_asset.group_name,
         "description": source_asset.description,
         "partitions_def": source_asset.partitions_def,
+        "freshness_policy": freshness_policy,
+        "auto_materialize_policy": AutoMaterializePolicy.eager(),
     }
 
     if source_asset.io_manager_def:
