@@ -67,6 +67,8 @@ class K8sRunLauncher(RunLauncher, ConfigurableClass):
         scheduler_name=None,
         security_context=None,
         run_k8s_config=None,
+        allowed_user_defined_k8s_config_fields=None,
+        allowed_user_defined_env_vars=None,
     ):
         self._inst_data = check.opt_inst_param(inst_data, "inst_data", ConfigurableClassData)
         self.job_namespace = check.str_param(job_namespace, "job_namespace")
@@ -118,6 +120,13 @@ class K8sRunLauncher(RunLauncher, ConfigurableClass):
         self._scheduler_name = check.opt_str_param(scheduler_name, "scheduler_name")
         self._security_context = check.opt_dict_param(security_context, "security_context")
         self._run_k8s_config = check.opt_dict_param(run_k8s_config, "run_k8s_config")
+
+        self._allowed_user_defined_k8s_config_fields = check.opt_dict_param(
+            allowed_user_defined_k8s_config_fields, "allowed_user_defined_k8s_config_fields"
+        )
+        self._allowed_user_defined_env_vars = check.opt_sequence_param(
+            allowed_user_defined_env_vars, "allowed_user_defined_env_vars"
+        )
         super().__init__()
 
     @property
@@ -179,6 +188,14 @@ class K8sRunLauncher(RunLauncher, ConfigurableClass):
     @property
     def fail_pod_on_run_failure(self) -> Optional[bool]:
         return self._fail_pod_on_run_failure
+
+    @property
+    def allowed_user_defined_k8s_config_fields(self) -> Mapping[str, Any]:
+        return self._allowed_user_defined_k8s_config_fields
+
+    @property
+    def allowed_user_defined_env_vars(self) -> Sequence[str]:
+        return self._allowed_user_defined_env_vars
 
     @classmethod
     def config_type(cls):
