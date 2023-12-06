@@ -108,6 +108,29 @@ class AssetDaemonCursor(NamedTuple):
             materialized_requested_or_discarded_subset=handled_subset,
         )
 
+    def subset_cursor(self, asset_keys: AbstractSet[AssetKey]) -> "AssetDaemonCursor":
+        return AssetDaemonCursor(
+            latest_storage_id=self.latest_storage_id,
+            handled_root_asset_keys=asset_keys & self.handled_root_asset_keys,
+            handled_root_partitions_by_asset_key={
+                asset_key: val
+                for asset_key, val in self.handled_root_partitions_by_asset_key.items()
+                if asset_key in asset_keys
+            },
+            evaluation_id=self.evaluation_id,
+            last_observe_request_timestamp_by_asset_key={
+                asset_key: val
+                for asset_key, val in self.last_observe_request_timestamp_by_asset_key.items()
+                if asset_key in asset_keys
+            },
+            latest_evaluation_by_asset_key={
+                asset_key: val
+                for asset_key, val in self.latest_evaluation_by_asset_key.items()
+                if asset_key in asset_keys
+            },
+            latest_evaluation_timestamp=self.latest_evaluation_timestamp,
+        )
+
     def with_updates(
         self,
         latest_storage_id: Optional[int],
