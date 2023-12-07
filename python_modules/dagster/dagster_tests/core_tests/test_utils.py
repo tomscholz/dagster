@@ -10,6 +10,7 @@ from dagster._core.test_utils import environ
 from dagster._core.utils import (
     InheritContextThreadPoolExecutor,
     check_dagster_package_version,
+    find_strongly_connected_components,
     parse_env_var,
 )
 from dagster._utils import hash_collection, library_version_from_core_version
@@ -119,3 +120,27 @@ def test_inherit_context_threadpool():
 
         for f in as_completed(futures):
             assert f.result()
+
+
+def test_find_strongly_connected_components():
+    graph = {
+        "a": ["b", "c"],
+        "b": ["c", "d"],
+        "c": ["d", "e"],
+        "d": ["e", "a"],
+        "e": ["f"],
+        "f": ["e"],
+    }
+    sccs = find_strongly_connected_components(graph)
+    assert len(sccs) == 2
+    assert ["d", "c", "b", "a"] in sccs
+    assert ["f", "e"] in sccs
+
+    graph = {
+        "a": ["b", "c"],
+        "b": ["a"],
+        "c": ["a"],
+    }
+    sccs = find_strongly_connected_components(graph)
+    assert len(sccs) == 1
+    assert ["c", "b", "a"] in sccs
