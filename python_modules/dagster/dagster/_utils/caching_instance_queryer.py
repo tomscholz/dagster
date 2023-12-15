@@ -10,6 +10,7 @@ from typing import (
     Optional,
     Sequence,
     Set,
+    Tuple,
     Union,
     cast,
 )
@@ -495,29 +496,32 @@ class CachingInstanceQueryer(DynamicPartitionsStore):
         return partition_key in self.get_dynamic_partitions(partitions_def_name)
 
     @cached_method
-    def asset_partitions_with_newly_updated_parents(
+    def asset_partitions_with_newly_updated_parents_and_new_cursor(
         self,
         *,
         latest_storage_id: Optional[int],
         child_asset_key: AssetKey,
         map_old_time_partitions: bool = True,
-    ) -> AbstractSet[AssetKeyPartitionKey]:
+    ) -> Tuple[AbstractSet[AssetKeyPartitionKey], Optional[int]]:
         """Finds asset partitions of the given child whose parents have been materialized since
         latest_storage_id.
         """
         if self.asset_graph.is_source(child_asset_key):
-            return set()
+            return set(), latest_storage_id
 
         child_partitions_def = self.asset_graph.get_partitions_def(child_asset_key)
         child_time_partitions_def = get_time_partitions_def(child_partitions_def)
 
         child_asset_partitions_with_updated_parents = set()
+
+        max_storage_ids = []
         for parent_asset_key in self.asset_graph.get_parents(child_asset_key):
             # ignore non-observable sources
             if self.asset_graph.is_source(parent_asset_key) and not self.asset_graph.is_observable(
                 parent_asset_key
             ):
                 continue
+
             # if the parent has not been updated at all since the latest_storage_id, then skip
             if not self.get_asset_partitions_updated_after_cursor(
                 asset_key=parent_asset_key,
@@ -526,6 +530,13 @@ class CachingInstanceQueryer(DynamicPartitionsStore):
                 respect_materialization_data_versions=False,
             ):
                 continue
+
+            # keep track of the maximum storage id that we've seen for a given parent
+            parent_asset_record = self.get_asset_record(parent_asset_key)
+            if parent_asset_record:
+                max_storage_ids.append(
+                    parent_asset_record.asset_entry.last_materialization_storage_id
+                )
 
             parent_partitions_def = self.asset_graph.get_partitions_def(parent_asset_key)
             if parent_partitions_def is None:
@@ -564,7 +575,10 @@ class CachingInstanceQueryer(DynamicPartitionsStore):
                 # we know a parent updated, and because the parent has a partitions def and the
                 # child does not, the child could not have been materialized in the same run
                 if child_partitions_def is None:
-                    return {AssetKeyPartitionKey(child_asset_key)}
+                    child_asset_partitions_with_updated_parents = {
+                        AssetKeyPartitionKey(child_asset_key)
+                    }
+                    break
                 # the set of asset partitions which have been updated since the latest storage id
                 parent_partitions_subset = self.get_partitions_subset_updated_after_cursor(
                     asset_key=parent_asset_key, after_cursor=latest_storage_id
@@ -623,7 +637,16 @@ class CachingInstanceQueryer(DynamicPartitionsStore):
                         ):
                             child_asset_partitions_with_updated_parents.add(child_asset_partition)
 
-        return child_asset_partitions_with_updated_parents
+        asset_record = self.get_asset_record(child_asset_key)
+        if asset_record:
+            max_storage_ids.append(asset_record.asset_entry.last_materialization_storage_id)
+
+        # the new latest storage id will be the greatest observed storage id among this asset and
+        # its parents
+        new_latest_storage_id = max(
+            filter(None, [latest_storage_id, *max_storage_ids]), default=None
+        )
+        return (child_asset_partitions_with_updated_parents, new_latest_storage_id)
 
     ####################
     # RECONCILIATION
