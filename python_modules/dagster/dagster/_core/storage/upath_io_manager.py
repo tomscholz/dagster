@@ -400,6 +400,8 @@ class UPathIOManager(MemoizableIOManager):
             }
 
     def load_input(self, context: InputContext) -> Union[Any, Dict[str, Any]]:
+        upstream_metadata = context.upstream_output.metadata if context.upstream_output else {}
+        print(upstream_metadata)
         # If no asset key, we are dealing with an op output which is always non-partitioned
         if not context.has_asset_key or not context.has_asset_partitions:
             path = self._get_path(context)
@@ -431,6 +433,8 @@ class UPathIOManager(MemoizableIOManager):
 
     def handle_output(self, context: OutputContext, obj: Any):
         if obj is None:
+            # add some marker that the output was None
+            context.add_output_metadata({"output_is_none": True})
             return
         if context.has_asset_partitions:
             paths = self._get_paths_for_partitions(context)
