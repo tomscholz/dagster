@@ -2027,7 +2027,7 @@ type LocationStateChangeSubscription {
   event: LocationStateChangeEvent!
 }
 
-union RepositoriesOrError = RepositoryConnection | PythonError
+union RepositoriesOrError = RepositoryConnection | RepositoryNotFoundError | PythonError
 
 type Repository {
   id: ID!
