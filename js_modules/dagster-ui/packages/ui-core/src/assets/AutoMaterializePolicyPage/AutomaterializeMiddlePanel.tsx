@@ -12,7 +12,7 @@ import {
 import * as React from 'react';
 
 import {ErrorWrapper} from '../../app/PythonErrorInfo';
-import {formatElapsedTimeWithoutMsec} from '../../app/Util';
+import {formatElapsedTimeWithMsec} from '../../app/Util';
 import {Timestamp} from '../../app/time/Timestamp';
 import {numberFormatter} from '../../ui/formatters';
 import {AssetKey} from '../types';
@@ -219,7 +219,7 @@ export const AutomaterializeMiddlePanelWithData = ({
                 <Subtitle2>Duration</Subtitle2>
                 <div>
                   {selectedEvaluation?.startTimestamp && selectedEvaluation?.endTimestamp
-                    ? formatElapsedTimeWithoutMsec(
+                    ? formatElapsedTimeWithMsec(
                         (selectedEvaluation.endTimestamp - selectedEvaluation.startTimestamp) *
                           1000,
                       )
