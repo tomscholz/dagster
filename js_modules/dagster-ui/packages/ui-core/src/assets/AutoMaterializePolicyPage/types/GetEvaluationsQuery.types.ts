@@ -362,7 +362,7 @@ export type GetEvaluationsSpecificPartitionQuery = {
   } | null;
 };
 
-export type UnpartitionedAssetConditionEvaluationNodeFragment = {
+export type UnpartitionedAssetConditionEvaluationNodeFragment2Fragment = {
   __typename: 'UnpartitionedAssetConditionEvaluationNode';
   description: string;
   startTimestamp: number | null;
@@ -372,7 +372,7 @@ export type UnpartitionedAssetConditionEvaluationNodeFragment = {
   childUniqueIds: Array<string>;
 };
 
-export type PartitionedAssetConditionEvaluationNodeFragment = {
+export type PartitionedAssetConditionEvaluationNodeFragment2Fragment = {
   __typename: 'PartitionedAssetConditionEvaluationNode';
   description: string;
   startTimestamp: number | null;
@@ -423,7 +423,7 @@ export type PartitionedAssetConditionEvaluationNodeFragment = {
   } | null;
 };
 
-export type SpecificPartitionAssetConditionEvaluationNodeFragment = {
+export type SpecificPartitionAssetConditionEvaluationNodeFragment2Fragment = {
   __typename: 'SpecificPartitionAssetConditionEvaluationNode';
   description: string;
   status: Types.AssetConditionEvaluationStatus;
@@ -431,7 +431,7 @@ export type SpecificPartitionAssetConditionEvaluationNodeFragment = {
   childUniqueIds: Array<string>;
 };
 
-export type AssetSubsetFragment = {
+export type AssetSubsetFragment2Fragment = {
   __typename: 'AssetSubset';
   subsetValue: {
     __typename: 'AssetSubsetValue';
