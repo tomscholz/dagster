@@ -230,7 +230,7 @@ const PartitionedPolicyEvaluationTable = ({
                 </Box>
               </td>
               <td>
-                <TimeElapsed startUnix={startTimestamp} endUnix={endTimestamp} />
+                <TimeElapsed startUnix={startTimestamp} endUnix={endTimestamp} msec />
               </td>
             </EvaluationRow>
           );

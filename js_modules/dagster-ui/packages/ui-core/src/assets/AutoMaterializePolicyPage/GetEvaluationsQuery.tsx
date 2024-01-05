@@ -110,14 +110,14 @@ export const GET_EVALUATIONS_SPECIFIC_PARTITION_QUERY = gql`
     ) {
       rootUniqueId
       evaluationNodes {
-        ...UnpartitionedAssetConditionEvaluationNodeFragment
-        ...PartitionedAssetConditionEvaluationNodeFragment
-        ...SpecificPartitionAssetConditionEvaluationNodeFragment
+        ...UnpartitionedAssetConditionEvaluationNodeFragment2
+        ...PartitionedAssetConditionEvaluationNodeFragment2
+        ...SpecificPartitionAssetConditionEvaluationNodeFragment2
       }
     }
   }
 
-  fragment UnpartitionedAssetConditionEvaluationNodeFragment on UnpartitionedAssetConditionEvaluationNode {
+  fragment UnpartitionedAssetConditionEvaluationNodeFragment2 on UnpartitionedAssetConditionEvaluationNode {
     description
     startTimestamp
     endTimestamp
@@ -125,7 +125,7 @@ export const GET_EVALUATIONS_SPECIFIC_PARTITION_QUERY = gql`
     uniqueId
     childUniqueIds
   }
-  fragment PartitionedAssetConditionEvaluationNodeFragment on PartitionedAssetConditionEvaluationNode {
+  fragment PartitionedAssetConditionEvaluationNodeFragment2 on PartitionedAssetConditionEvaluationNode {
     description
     startTimestamp
     endTimestamp
@@ -133,25 +133,25 @@ export const GET_EVALUATIONS_SPECIFIC_PARTITION_QUERY = gql`
     numFalse
     numSkipped
     trueSubset {
-      ...AssetSubsetFragment
+      ...AssetSubsetFragment2
     }
     falseSubset {
-      ...AssetSubsetFragment
+      ...AssetSubsetFragment2
     }
     candidateSubset {
-      ...AssetSubsetFragment
+      ...AssetSubsetFragment2
     }
     uniqueId
     childUniqueIds
   }
-  fragment SpecificPartitionAssetConditionEvaluationNodeFragment on SpecificPartitionAssetConditionEvaluationNode {
+  fragment SpecificPartitionAssetConditionEvaluationNodeFragment2 on SpecificPartitionAssetConditionEvaluationNode {
     description
     status
     uniqueId
     childUniqueIds
   }
 
-  fragment AssetSubsetFragment on AssetSubset {
+  fragment AssetSubsetFragment2 on AssetSubset {
     subsetValue {
       isPartitioned
       partitionKeys
